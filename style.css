@@ -58,6 +58,14 @@ h2 {
     border: 1px solid #e94560;
 }
 
+.game-over-card {
+    background: #7c2d12 !important;
+    color: white !important;
+    text-align: center;
+    border: 3px solid #f97316;
+    animation: pulse 2s infinite;
+}
+
 .card {
     background: #ffffff;
     color: #1e293b;
@@ -109,20 +117,19 @@ button:active { transform: scale(0.98); }
     gap: 14px;
 }
 
-/* Строка игрока */
 .player-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 10px;
     background: #f8fafc;
-    border-left: 5px solid #1f4068;
+    border-left: 6px solid #1f4068;
     border-radius: 6px;
     margin-bottom: 6px;
 }
 
 .player-row.dead {
-    border-left-color: #64748b;
+    border-left-color: #64748b !important;
     background: #e2e8f0;
     opacity: 0.5;
 }
@@ -141,10 +148,10 @@ button:active { transform: scale(0.98); }
 .badge {
     font-size: 0.75rem;
     padding: 2px 6px;
-    background: #1f4068;
     color: #fff;
     border-radius: 4px;
     width: max-content;
+    font-weight: bold;
 }
 
 .btn-kill {
@@ -154,7 +161,6 @@ button:active { transform: scale(0.98); }
 }
 .btn-kill.is-dead { background-color: #10b981; }
 
-/* Блоки ночных действий */
 .night-action-block {
     margin-bottom: 12px;
     background: #f1f5f9;
@@ -174,7 +180,6 @@ button:active { transform: scale(0.98); }
 .btn-night { background-color: #16213e; width: 100%; margin-top: 10px; }
 .btn-day { background-color: #d97706; width: 100%; margin-top: 15px; }
 
-/* Интерфейс дневного голосования */
 .vote-row {
     display: flex;
     justify-content: space-between;
@@ -191,12 +196,10 @@ button:active { transform: scale(0.98); }
 
 .silent-tag { color: #dc2626; font-size: 0.75rem; font-weight: bold; }
 
-/* Логи */
 .log-section { margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
 #gameLog { list-style: none; max-height: 140px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; color: #475569; }
 #gameLog li { padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
 
-/* МОДАЛЬНЫЕ ОКНА */
 .modal {
     display: none;
     position: fixed;

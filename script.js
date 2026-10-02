@@ -4,6 +4,7 @@ let nightCounter = 1;
 let morningSpeechText = "";
 
 const mafiaFraction = ['Мафия', 'Оборотень', 'Босс', 'Нагнетатель', 'Киллер', 'Сэнсей', 'Камикадзе', 'Ниндзя'];
+const activePeaceful = ['Бессмертный', 'Любовница', 'Телохранитель', 'Комиссар', 'Священник', 'Журналист', 'Свидетель'];
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
@@ -45,7 +46,6 @@ function startGame() {
 function isAlive(role) {
     return players.some(p => p.role === role && p.isAlive);
 }
-
 function updateUI() {
     document.getElementById('aliveCount').textContent = players.filter(p => p.isAlive).length;
 
@@ -66,10 +66,20 @@ function updateUI() {
     players.forEach(p => {
         const row = document.createElement('div');
         row.className = `player-row ${p.isAlive ? '' : 'dead'}`;
+
+        let borderCol = '#1f4068';
+        let badgeBg = '#1f4068';
+
+        if (mafiaFraction.includes(p.role)) { borderCol = '#dc2626'; badgeBg = '#dc2626'; }
+        else if (activePeaceful.includes(p.role)) { borderCol = '#10b981'; badgeBg = '#10b981'; }
+        else if (p.role === 'Маньяк') { borderCol = '#8b5cf6'; badgeBg = '#8b5cf6'; }
+
+        row.style.borderLeftColor = borderCol;
+
         row.innerHTML = `
             <div class="player-info">
                 <strong>${p.name}</strong>
-                <span class="badge" style="background:${mafiaFraction.includes(p.role)?'#dc2626':'#1f4068'}">${p.role}</span>
+                <span class="badge" style="background:${badgeBg}">${p.role}</span>
             </div>
             <button class="btn-kill ${p.isAlive ? '' : 'is-dead'}" onclick="manualToggleLife('${p.id}')">
                 ${p.isAlive ? 'Убить' : 'Оживить'}
@@ -80,7 +90,9 @@ function updateUI() {
 
     renderNightControls();
     renderDayControls();
+    checkGameEnd();
 }
+
 function renderNightControls() {
     const form = document.getElementById('nightForm');
     const title = document.getElementById('actionCardTitle');
@@ -109,28 +121,40 @@ function renderNightControls() {
 
     if (regularShooters.length > 0 || (hasBoss && regularShooters.length === 0)) {
         form.innerHTML += createSelectHtml('actMafia1', '🎯 Мафия: Основная жертва');
-
-        let killerActive = totalMafiaAlive.length === 1 && totalMafiaAlive[0].role === 'Киллер';
-        if (killerActive) {
+        if (totalMafiaAlive.length === 1 && totalMafiaAlive.role === 'Киллер') {
             form.innerHTML += createSelectHtml('actMafia2', '🔥 Киллер (Один): Второй выстрел');
         }
     }
 
+    if (isAlive('Ниндзя')) {
+        form.innerHTML += createSelectHtml('actNinjaGuessTarget', '🥷 Ниндзя: Угадать роль игрока?');
+        form.innerHTML += `<div class="night-action-block"><label>🥷 Ниндзя: Какую роль предполагаете?</label>
+            <select id="actNinjaRoleGuess"><option value="">-- Нет предположения --</option>
+            <option value="Мирный">Мирный</option><option value="Бессмертный">Бессмертный</option>
+            <option value="Любовница">Любовница</option><option value="Телохранитель">Телохранитель</option>
+            <option value="Комиссар">Комиссар</option><option value="Священник">Священник</option>
+            <option value="Журналист">Журналист</option><option value="Свидетель">Свидетель</option>
+            <option value="Маньяк">Маньяк</option></select></div>`;
+    }
+
+    if (isAlive('Маньяк')) form.innerHTML += createSelectHtml('actManiac', '🔮 Маньяк: выбор цели для охоты');
     if (isAlive('Нагнетатель')) form.innerHTML += createSelectHtml('actNagnet', '🤫 Нагнетатель: кого лишить голоса?');
     if (isAlive('Комиссар')) form.innerHTML += createSelectHtml('actSheriff', '🔍 Комиссар: в кого стрелять?');
 
     if (isAlive('Священник')) {
-        form.innerHTML += createSelectHtml('actPriestTarget', '⛪ Священник: выбор цели');
+        form.innerHTML += createSelectHtml('actPriestTarget', '⛪ Священник: цель');
         form.innerHTML += `<div class="night-action-block"><label>⛪ Действие Священника:</label>
-            <select id="actPriestType">
-                <option value="check">Проверить (Совершал ли убийства?)</option>
-                <option value="execute">Казнить (Убить игрока)</option>
-            </select></div>`;
+            <select id="actPriestType"><option value="check">Проверить</option><option value="execute">Казнить</option></select></div>`;
     }
+
+    if (isAlive('Журналист')) {
+        form.innerHTML += createSelectHtml('actJourno1', '📰 Журналист: Первый игрок');
+        form.innerHTML += createSelectHtml('actJourno2', '📰 Журналист: Второй игрок');
+    }
+    if (isAlive('Свидетель')) form.innerHTML += createSelectHtml('actWitness', '👁️ Свидетель: за кем следить?');
 
     form.innerHTML += `<button onclick="calculateNight()" class="btn-night">☀️ Рассчитать итоги ночи</button>`;
 }
-
 function calculateNight() {
     const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
 
@@ -138,10 +162,16 @@ function calculateNight() {
     let guardTargetId = getVal('actGuard');
     let mafia1Id = getVal('actMafia1');
     let mafia2Id = getVal('actMafia2');
+    let ninjaGuessTargetId = getVal('actNinjaGuessTarget');
+    let ninjaRoleGuess = getVal('actNinjaRoleGuess');
+    let maniacTargetId = getVal('actManiac');
     let nagnetId = getVal('actNagnet');
     let sheriffId = getVal('actSheriff');
     let priestTargetId = getVal('actPriestTarget');
     let priestType = getVal('actPriestType');
+    let journo1Id = getVal('actJourno1');
+    let journo2Id = getVal('actJourno2');
+    let witnessId = getVal('actWitness');
 
     players.forEach(p => p.isSilenced = false);
 
@@ -152,6 +182,7 @@ function calculateNight() {
     }
 
     let targetsToKill = [];
+    let killersThisNight = new Set();
     let logs = [];
     let morningReport = [];
 
@@ -165,26 +196,43 @@ function calculateNight() {
     let mafiaAttacks = [];
     if (mafia1Id && !isBlocked('Мафия') && !isBlocked('Оборотень') && !isBlocked('Босс') && !isBlocked('Киллер') && !isBlocked('Нагнетатель') && !isBlocked('Сэнсей') && !isBlocked('Камикадзе') && !isBlocked('Ниндзя')) {
         mafiaAttacks.push(mafia1Id);
+        let currentShooter = players.find(x => mafiaFraction.includes(x.role) && x.isAlive);
+        if(currentShooter) killersThisNight.add(currentShooter.id);
     }
-    if (mafia2Id && !isBlocked('Киллер')) mafiaAttacks.push(mafia2Id);
+    if (mafia2Id && !isBlocked('Киллер')) { mafiaAttacks.push(mafia2Id); }
+
+    if (ninjaGuessTargetId && ninjaRoleGuess && !isBlocked('Ниндзя')) {
+        let target = players.find(x => x.id === ninjaGuessTargetId);
+        if (target && target.role === ninjaRoleGuess) {
+            mafiaAttacks.push(ninjaGuessTargetId);
+            logs.push(`🥷 Ниндзя угадал роль игрока ${target.name} (${target.role}) и совершил доп. убийство!`);
+        }
+    }
 
     mafiaAttacks.forEach(targetId => {
         let target = players.find(x => x.id === targetId);
-        if (!target) return;
-
-        if (target.role === 'Бессмертный') {
-            logs.push(`Мафия атаковала Бессмертного (${target.name}), атака бесполезна.`);
-            return;
-        }
-        targetsToKill.push({ targetId: targetId, reason: 'мафии' });
+        if (target && target.role !== 'Бессмертный') targetsToKill.push({ targetId: targetId, reason: 'мафии' });
     });
+
+    if (maniacTargetId && !isBlocked('Маньяк')) {
+        let target = players.find(x => x.id === maniacTargetId);
+        if (target) {
+            if (target.role !== 'Мирный') {
+                targetsToKill.push({ targetId: target.id, reason: 'Маньяка' });
+                let m = players.find(x => x.role === 'Маньяк' && x.isAlive);
+                if(m) killersThisNight.add(m.id);
+            } else {
+                logs.push(`🔮 Маньяк напал на обычного Мирного (${target.name}), убийство не произошло.`);
+            }
+        }
+    }
     if (sheriffId && !isBlocked('Комиссар')) {
         let target = players.find(x => x.id === sheriffId);
         if (target) {
             targetsToKill.push({ targetId: target.id, reason: 'Комиссара' });
             if (!mafiaFraction.includes(target.role)) {
                 let commisar = players.find(x => x.role === 'Комиссар' && x.isAlive);
-                if (commisar) targetsToKill.push({ targetId: commisar.id, reason: 'своей ошибки (стрелял в мирного)' });
+                if (commisar) targetsToKill.push({ targetId: commisar.id, reason: 'ошибки Комиссара' });
             }
         }
     }
@@ -196,13 +244,31 @@ function calculateNight() {
                 targetsToKill.push({ targetId: target.id, reason: 'Священника' });
             } else {
                 let clear = (!mafiaFraction.includes(target.role) || target.role === 'Оборотень');
-                logs.push(`Священник проверил ${target.name}: грехов за ним ${clear ? 'не обнаружено' : 'обнаружено (Мафия)'}.`);
+                logs.push(`⛪ Священник проверил ${target.name}: грехов ${clear ? 'не обнаружено' : 'обнаружено'}.`);
             }
         }
     }
 
-    let deadThisNight = new Set();
+    if (journo1Id && journo2Id && !isBlocked('Журналист')) {
+        let p1 = players.find(x => x.id === journo1Id);
+        let p2 = players.find(x => x.id === journo2Id);
+        if (p1 && p2) {
+            let type1 = mafiaFraction.includes(p1.role) ? 'мафия' : (p1.role === 'Маньяк' ? 'маньяк' : 'мирный');
+            let type2 = mafiaFraction.includes(p2.role) ? 'мафия' : (p2.role === 'Маньяк' ? 'маньяк' : 'мирный');
+            let checkResult = (type1 === type2) ? "ОДИНАКОВЫЙ" : "РАЗНЫЙ";
+            logs.push(`📰 Журналист сравнил ${p1.name} и ${p2.name}: у них ${checkResult} статус фракции.`);
+        }
+    }
 
+    if (witnessId && !isBlocked('Свидетель')) {
+        let target = players.find(x => x.id === witnessId);
+        if (target) {
+            let didKill = killersThisNight.has(target.id);
+            logs.push(`👁️ Свидетель следил за ${target.name}: этот игрок ночью ${didKill ? 'СОВЕРШАЛ' : 'НЕ СОВЕРШАЛ'} убийство.`);
+        }
+    }
+
+    let deadThisNight = new Set();
     targetsToKill.forEach(attack => {
         let victim = players.find(x => x.id === attack.targetId);
         if (!victim || !victim.isAlive) return;
@@ -211,19 +277,19 @@ function calculateNight() {
             let guard = players.find(x => x.role === 'Телохранитель' && x.isAlive);
             if (guard && !deadThisNight.has(guard.id)) {
                 deadThisNight.add(guard.id);
-                morningReport.push(`🛡️ Нападение на ${victim.name} было предотвращено! Но Телохранитель погиб, защищая его.`);
+                morningReport.push(`🛡️ Нападение на ${victim.name} отбито! Телохранитель погиб защищая его.`);
                 return;
             }
         }
 
         if (victim.role === 'Сэнсей' && victim.senseiShield) {
             victim.senseiShield = false;
-            morningReport.push(`🥋 Сэнсей парировал ночную атаку на себя и остался невредим!`);
+            morningReport.push(`🥋 Сэнсей парировал ночную атаку!`);
             return;
         }
 
         deadThisNight.add(victim.id);
-        morningReport.push(`💀 Был убит игрок ${victim.name} от рук ${attack.reason}.`);
+        morningReport.push(`💀 Убит игрок ${victim.name} от рук ${attack.reason}.`);
     });
 
     deadThisNight.forEach(id => {
@@ -231,14 +297,10 @@ function calculateNight() {
         if (p) p.isAlive = false;
     });
 
-    if (morningReport.length === 0) {
-        morningReport.push("🏙️ Утро наступило! Невероятно, но этой ночью никто не погиб. Все живы!");
-    }
+    if (morningReport.length === 0) morningReport.push("🏙️ Утро! Этой ночью никто не погиб.");
 
-    morningSpeechText = `--- Результаты Ночи №${nightCounter} ---\n` + morningReport.join('\n');
-
+    morningSpeechText = `--- Утро Ночи №${nightCounter} ---\n` + morningReport.join('\n');
     logs.forEach(l => addLog(l));
-    addLog(`--- Итоги Ночи №${nightCounter} подведены ---`);
 
     gamePhase = 'day';
     updateUI();
@@ -248,12 +310,9 @@ function calculateNight() {
 
 function renderDayControls() {
     const form = document.getElementById('dayForm');
-    const title = document.getElementById('actionCardTitle');
     const container = document.getElementById('votingContainer');
 
     if (gamePhase !== 'day') { form.style.display = 'none'; return; }
-
-    title.textContent = `☀️ Дневное голосование (День ${nightCounter})`;
     container.innerHTML = '';
     form.style.display = 'block';
 
@@ -288,21 +347,18 @@ function processDayVoting() {
     let candidates = alive.filter(p => p.votes === maxVotes && p.votes > 0);
 
     if (candidates.length !== 1) {
-        morningSpeechText = "⚖️ Голосование окончено. Город разделился во мнениях или никто не проголосовал. Никто не покинул стол.";
-        addLog("Днём никто не был изгнан.");
+        morningSpeechText = "⚖️ Суд Линча не состоялся. Мнения разделились.";
     } else {
         let exiled = candidates[0];
         exiled.isAlive = false;
-        morningSpeechText = `⚖️ По итогам дневного голосования город изгнал игрока: ${exiled.name} (${exiled.role}).`;
-        addLog(`Город изгнал: ${exiled.name}`);
+        morningSpeechText = `⚖️ Город изгнал игрока: ${exiled.name} (${exiled.role}).`;
 
         if (exiled.role === 'Камикадзе') {
             let targets = players.filter(p => p.isAlive && p.id !== exiled.id);
             if (targets.length > 0) {
                 let collateral = targets[Math.floor(Math.random() * targets.length)];
                 collateral.isAlive = false;
-                morningSpeechText += `\n💥 Изгнанный оказался Камикадзе! Уходя, он взрывает игрока: ${collateral.name}.`;
-                addLog(`Камикадзе уничтожил ${collateral.name}`);
+                morningSpeechText += `\n💥 Камикадзе взрывает с собой: ${collateral.name}.`;
             }
         }
     }
@@ -314,11 +370,45 @@ function processDayVoting() {
     document.getElementById('speechContent').textContent = morningSpeechText;
 }
 
+function checkGameEnd() {
+    if (gamePhase === 'setup') return;
+
+    let alive = players.filter(p => p.isAlive);
+    let mafiaCount = alive.filter(p => mafiaFraction.includes(p.role)).length;
+    let maniacCount = alive.filter(p => p.role === 'Маньяк').length;
+    let peacefulCount = alive.length - mafiaCount - maniacCount;
+
+    let overBlock = document.getElementById('gameOverScreen');
+    let winnerText = document.getElementById('winnerText');
+
+    let activeNonPeacefulCount = alive.filter(p => p.role !== 'Мирный').length;
+    if (maniacCount > 0 && activeNonPeacefulCount === 1) {
+        winnerText.textContent = "🏆 ПОБЕДА МАНЬЯКА! 🔮";
+        winnerText.style.color = "#8b5cf6";
+        overBlock.style.display = 'block';
+        return;
+    }
+
+    if (mafiaCount >= (peacefulCount + maniacCount) && mafiaCount > 0) {
+        winnerText.textContent = "🏆 ПОБЕДА МАФИИ! 🎯";
+        winnerText.style.color = "#dc2626";
+        overBlock.style.display = 'block';
+        return;
+    }
+
+    if (mafiaCount === 0 && maniacCount === 0) {
+        winnerText.textContent = "🏆 ПОБЕДА МИРНЫХ! 🏙️";
+        winnerText.style.color = "#10b981";
+        overBlock.style.display = 'block';
+        return;
+    }
+}
+
 function manualToggleLife(id) {
     const player = players.find(p => p.id === id);
     if (player) {
         player.isAlive = !player.isAlive;
-        addLog(`Статус ${player.name} изменен вручную (${player.isAlive ? 'Жив' : 'Мертв'})`);
+        addLog(`Статус ${player.name} изменен (${player.isAlive ? 'Жив' : 'Мертв'})`);
         updateUI();
     }
 }

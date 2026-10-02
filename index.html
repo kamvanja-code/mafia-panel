@@ -3,14 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mafia Advanced Engine</title>
+    <title>Mafia Ultimate Engine 2026</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>🎙️ Панель Ведущего: Мафия</h1>
+        <h1>🎙️ Панель Ведущего: Мафия Ultimate</h1>
 
-        <!-- Верхняя панель управления и инфо-окна -->
+        <!-- Экраны окончания игры -->
+        <div id="gameOverScreen" class="card game-over-card" style="display: none;">
+            <h2 id="winnerText">🏆 ПОБЕДА!</h2>
+            <p>Игра официально завершена.</p>
+            <button onclick="location.reload()" class="btn-start">🔄 Начать новую игру</button>
+        </div>
+
+        <!-- Верхняя панель -->
         <div class="top-buttons">
             <button onclick="openModal('rulesModal')" class="btn-info">📖 Правила и Роли</button>
             <button onclick="openModal('speechModal')" class="btn-info btn-speech-trigger">📢 Речь Ведущего</button>
@@ -34,6 +41,8 @@
                         <option value="Телохранитель">Телохранитель</option>
                         <option value="Комиссар">Комиссар</option>
                         <option value="Священник">Священник</option>
+                        <option value="Журналист">Журналист</option>
+                        <option value="Свидетель">Свидетель</option>
                     </optgroup>
                     <optgroup label="Фракция Мафии">
                         <option value="Мафия">Обычная Мафия</option>
@@ -44,6 +53,9 @@
                         <option value="Сэнсей">Сэнсей</option>
                         <option value="Камикадзе">Камикадзе</option>
                         <option value="Ниндзя">Ниндзя</option>
+                    </optgroup>
+                    <optgroup label="Нейтральные роли">
+                        <option value="Маньяк">Маньяк</option>
                     </optgroup>
                 </select>
                 <button id="addPlayerBtn">Добавить</button>
@@ -58,17 +70,14 @@
                 <div id="playersContainer" class="players-container"></div>
             </div>
 
-            <!-- Игровой пульт (Ночь или День) -->
+            <!-- Игровой пульт -->
             <div class="card actions-card">
                 <h2 id="actionCardTitle">🌙 Панель действий</h2>
 
-                <!-- Контейнер для ночных ходов -->
                 <div id="nightForm" class="night-form" style="display: none;"></div>
 
-                <!-- Контейнер для дневного голосования -->
                 <div id="dayForm" class="day-form" style="display: none;">
                     <h3>📊 Дневное голосование</h3>
-                    <p class="voting-hint">Нажмите «+1» для подсчета голосов за игрока.</p>
                     <div id="votingContainer"></div>
                     <button id="processDayBtn" class="btn-day">⚖️ Завершить голосование</button>
                 </div>
@@ -81,33 +90,26 @@
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: СПРАВКА И ПРАВИЛА -->
+    <!-- МОДАЛЬНОЕ ОКНО: ПРАВИЛА -->
     <div id="rulesModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('rulesModal')">&times;</span>
             <h2>📖 Описание ролей и Очерёдность</h2>
             <div class="modal-scroll">
-                <h3>⏳ Логический порядок ночных ходов:</h3>
+                <h3>⏳ Порядок ночных ходов:</h3>
                 <ol>
-                    <li><strong>Любовница</strong> — блокирует чужую способность.</li>
-                    <li><strong>Телохранитель</strong> — принимает удар на себя.</li>
-                    <li><strong>Мафия фракция (Мафия, Босс, Киллер, Нагнетатель, Ниндзя)</strong> — совершают нападения и накладывают дебаффы.</li>
-                    <li><strong>Проверки и возмездие (Священник, Комиссар)</strong> — ищут или карают преступников.</li>
+                    <li>Любовница (Блокировка)</li>
+                    <li>Телохранитель (Защита)</li>
+                    <li>Мафия / Киллер / Босс / Ниндзя (Нападения)</li>
+                    <li>Маньяк (Охота на не-мирных)</li>
+                    <li>Комиссар / Священник / Журналист / Свидетель (Следствие)</li>
                 </ol>
-                <h3 style="margin-top:15px;">🎭 Специфика новых ролей:</h3>
+                <h3 style="margin-top:15px;">🎭 Специфика изменённых и новых ролей:</h3>
                 <ul>
-                    <li><strong>Бессмертный:</strong> Иммунитет к ночным выстрелам мафии.</li>
-                    <li><strong>Любовница:</strong> Цель полностью пропускает текущую ночь.</li>
-                    <li><strong>Телохранитель:</strong> Погибает вместо своей цели.</li>
-                    <li><strong>Комиссар:</strong> Стреляет ночью. Если попал в мирного — погибает сам.</li>
-                    <li><strong>Священник:</strong> Проверяет игрока (узнает, убивал ли он) ИЛИ казнит его.</li>
-                    <li><strong>Оборотень:</strong> Священник всегда видит его как «не убивавшего».</li>
-                    <li><strong>Босс:</strong> Просыпается как стрелок мафии, только если вся базовая мафия мертва.</li>
-                    <li><strong>Нагнетатель:</strong> Лишает цель права голоса на следующий день.</li>
-                    <li><strong>Киллер:</strong> Стреляет в двух разных игроков, если остался один.</li>
-                    <li><strong>Сэнсей:</strong> Автоматически отражает первое покушение на себя.</li>
-                    <li><strong>Камикадзе:</strong> При изгнании днём забирает любого игрока на выбор с собой.</li>
-                    <li><strong>Ниндзя:</strong> Заранее активирует месть: если днём его выгонят, ночью погибнут все, кто был против него.</li>
+                    <li><strong>Ниндзя:</strong> Указывает жертву и угадывает роль. При успехе совершает двойное убийство.</li>
+                    <li><strong>Журналист:</strong> Выбирает двух игроков и узнает, одинаковые ли у них роли.</li>
+                    <li><strong>Свидетель:</strong> Следит за игроком. Узнает, если тот атаковал кого-то ночью.</li>
+                    <li><strong>Маньяк:</strong> Убивает выбранную цель, если она не является "Обычным Мирным". Побеждает соло, если ликвидировал последнего не-мирного активного игрока.</li>
                 </ul>
             </div>
         </div>
@@ -119,9 +121,9 @@
             <span class="close-btn" onclick="closeModal('speechModal')">&times;</span>
             <h2>📢 Объявление результатов фазы</h2>
             <div class="speech-box">
-                <p id="speechContent">Игра еще не началась или значимых событий пока не произошло.</p>
+                <p id="speechContent">Событий пока нет.</p>
             </div>
-            <button onclick="closeModal('speechModal')" style="width:100%; margin-top:15px;">Понятно</button>
+            <button onclick="closeModal('speechModal')" style="width:100%; margin-top:15px;">Закрыть</button>
         </div>
     </div>
 
