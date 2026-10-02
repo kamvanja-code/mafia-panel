@@ -63,7 +63,6 @@ h2 {
     color: white !important;
     text-align: center;
     border: 3px solid #f97316;
-    animation: pulse 2s infinite;
 }
 
 .card {
@@ -161,20 +160,38 @@ button:active { transform: scale(0.98); }
 }
 .btn-kill.is-dead { background-color: #10b981; }
 
-.night-action-block {
+/* Единая плашка для роли */
+.night-role-card {
     margin-bottom: 12px;
-    background: #f1f5f9;
-    padding: 10px;
-    border-radius: 6px;
-    border-left: 4px solid #e94560;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
 }
 
-.night-action-block label {
-    font-weight: bold;
-    font-size: 0.9rem;
-    margin-bottom: 4px;
+.night-role-card h4 {
+    font-size: 0.95rem;
+    color: #1e293b;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.night-field-group {
+    margin-bottom: 8px;
+}
+
+.night-field-group:last-child {
+    margin-bottom: 0;
+}
+
+.night-field-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 3px;
     display: block;
-    color: #334155;
 }
 
 .btn-night { background-color: #16213e; width: 100%; margin-top: 10px; }
@@ -194,7 +211,7 @@ button:active { transform: scale(0.98); }
 .btn-v-plus { min-height: 36px; padding: 4px 12px; background: #2563eb; }
 .btn-v-minus { min-height: 36px; padding: 4px 12px; background: #64748b; }
 
-.silent-tag { color: #dc2626; font-size: 0.75rem; font-weight: bold; }
+.silent-tag { color: #8b5cf6; font-size: 0.75rem; font-weight: bold; }
 
 .log-section { margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
 #gameLog { list-style: none; max-height: 140px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; color: #475569; }

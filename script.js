@@ -43,6 +43,13 @@ function startGame() {
     updateUI();
 }
 
+// Вспомогательная функция для генерации селекторов
+function getSelectOptionsHtml(alivePlayers) {
+    let html = '<option value="">-- Не выбирать --</option>';
+    alivePlayers.forEach(p => { html += `<option value="${p.id}">${p.name}</option>`; });
+    return html;
+}
+
 function isAlive(role) {
     return players.some(p => p.role === role && p.isAlive);
 }
@@ -104,57 +111,154 @@ function renderNightControls() {
     form.style.display = 'block';
 
     const alivePlayers = players.filter(p => p.isAlive);
+    const opts = getSelectOptionsHtml(alivePlayers);
 
-    function createSelectHtml(id, labelText) {
-        let html = `<div class="night-action-block"><label>${labelText}</label><select id="${id}"><option value="">-- Пропустить ход --</option>`;
-        alivePlayers.forEach(p => { html += `<option value="${p.id}">${p.name}</option>`; });
-        html += `</select></div>`;
-        return html;
+    // 1. Плашка Любовницы
+    if (isAlive('Любовница')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>💘 Любовница</h4>
+            <div class="night-field-group">
+                <label>Кого заблокировать на эту ночь?</label>
+                <select id="actLove">${opts}</select>
+            </div>
+        </div>`;
     }
 
-    if (isAlive('Любовница')) form.innerHTML += createSelectHtml('actLove', '💘 Любовница: кого заблокировать?');
-    if (isAlive('Телохранитель')) form.innerHTML += createSelectHtml('actGuard', '🛡️ Телохранитель: кого защитить?');
+    // 2. Плашка Телохранителя
+    if (isAlive('Телохранитель')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>🛡️ Телохранитель</h4>
+            <div class="night-field-group">
+                <label>Кого защитить от атаки?</label>
+                <select id="actGuard">${opts}</select>
+            </div>
+        </div>`;
+    }
 
+    // 3. Единая плашка Мафии
     const totalMafiaAlive = players.filter(p => mafiaFraction.includes(p.role) && p.isAlive);
     const regularShooters = totalMafiaAlive.filter(p => p.role !== 'Босс');
     const hasBoss = isAlive('Босс');
 
     if (regularShooters.length > 0 || (hasBoss && regularShooters.length === 0)) {
-        form.innerHTML += createSelectHtml('actMafia1', '🎯 Мафия: Основная жертва');
-        if (totalMafiaAlive.length === 1 && totalMafiaAlive.role === 'Киллер') {
-            form.innerHTML += createSelectHtml('actMafia2', '🔥 Киллер (Один): Второй выстрел');
+        let mafiaCardHtml = `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
+            <h4>🎯 Фракция Мафии</h4>
+            <div class="night-field-group">
+                <label>Основная цель для стрельбы:</label>
+                <select id="actMafia1">${opts}</select>
+            </div>`;
+
+        if (totalMafiaAlive.length === 1 && totalMafiaAlive[0].role === 'Киллер') {
+            mafiaCardHtml += `<div class="night-field-group">
+                <label>🔥 Второй выстрел Киллера (Остался один):</label>
+                <select id="actMafia2">${opts}</select>
+            </div>`;
         }
+        mafiaCardHtml += `</div>`;
+        form.innerHTML += mafiaCardHtml;
     }
 
+    // 4. Плашка Ниндзя
     if (isAlive('Ниндзя')) {
-        form.innerHTML += createSelectHtml('actNinjaGuessTarget', '🥷 Ниндзя: Угадать роль игрока?');
-        form.innerHTML += `<div class="night-action-block"><label>🥷 Ниндзя: Какую роль предполагаете?</label>
-            <select id="actNinjaRoleGuess"><option value="">-- Нет предположения --</option>
-            <option value="Мирный">Мирный</option><option value="Бессмертный">Бессмертный</option>
-            <option value="Любовница">Любовница</option><option value="Телохранитель">Телохранитель</option>
-            <option value="Комиссар">Комиссар</option><option value="Священник">Священник</option>
-            <option value="Журналист">Журналист</option><option value="Свидетель">Свидетель</option>
-            <option value="Маньяк">Маньяк</option></select></div>`;
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
+            <h4>🥷 Ниндзя</h4>
+            <div class="night-field-group">
+                <label>Какого игрока атаковать скрытно?</label>
+                <select id="actNinjaGuessTarget">${opts}</select>
+            </div>
+            <div class="night-field-group">
+                <label>Какую роль предполагаете у цели? (Для доп. убийства)</label>
+                <select id="actNinjaRoleGuess">
+                    <option value="">-- Нет предположения --</option>
+                    <option value="Мирный">Мирный</option><option value="Бессмертный">Бессмертный</option>
+                    <option value="Любовница">Любовница</option><option value="Телохранитель">Телохранитель</option>
+                    <option value="Комиссар">Комиссар</option><option value="Священник">Священник</option>
+                    <option value="Журналист">Журналист</option><option value="Свидетель">Свидетель</option>
+                    <option value="Маньяк">Маньяк</option>
+                </select>
+            </div>
+        </div>`;
+    }
+    // 5. Плашка Маньяка
+    if (isAlive('Маньяк')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #8b5cf6;">
+            <h4>🔮 Маньяк</h4>
+            <div class="night-field-group">
+                <label>Цель охоты (погибнет, если не обычный Мирный):</label>
+                <select id="actManiac">${opts}</select>
+            </div>
+        </div>`;
     }
 
-    if (isAlive('Маньяк')) form.innerHTML += createSelectHtml('actManiac', '🔮 Маньяк: выбор цели для охоты');
-    if (isAlive('Нагнетатель')) form.innerHTML += createSelectHtml('actNagnet', '🤫 Нагнетатель: кого лишить голоса?');
-    if (isAlive('Комиссар')) form.innerHTML += createSelectHtml('actSheriff', '🔍 Комиссар: в кого стрелять?');
+    // 6. Плашка Нагнетателя
+    if (isAlive('Нагнетатель')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
+            <h4>🤫 Нагнетатель</h4>
+            <div class="night-field-group">
+                <label>Кого заставить молчать весь следующий день?</label>
+                <select id="actNagnet">${opts}</select>
+            </div>
+        </div>`;
+    }
 
+    // 7. Плашка Комиссара
+    if (isAlive('Комиссар')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>🔍 Комиссар</h4>
+            <div class="night-field-group">
+                <label>В кого совершить выстрел?</label>
+                <select id="actSheriff">${opts}</select>
+            </div>
+        </div>`;
+    }
+
+    // 8. Плашка Священника
     if (isAlive('Священник')) {
-        form.innerHTML += createSelectHtml('actPriestTarget', '⛪ Священник: цель');
-        form.innerHTML += `<div class="night-action-block"><label>⛪ Действие Священника:</label>
-            <select id="actPriestType"><option value="check">Проверить</option><option value="execute">Казнить</option></select></div>`;
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>⛪ Священник</h4>
+            <div class="night-field-group">
+                <label>Выбор цели:</label>
+                <select id="actPriestTarget">${opts}</select>
+            </div>
+            <div class="night-field-group">
+                <label>Тип действия:</label>
+                <select id="actPriestType">
+                    <option value="check">Проверить (Узнать грехи)</option>
+                    <option value="execute">Казнить (Убить игрока)</option>
+                </select>
+            </div>
+        </div>`;
     }
 
+    // 9. Плашка Журналиста
     if (isAlive('Журналист')) {
-        form.innerHTML += createSelectHtml('actJourno1', '📰 Журналист: Первый игрок');
-        form.innerHTML += createSelectHtml('actJourno2', '📰 Журналист: Второй игрок');
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>📰 Журналист</h4>
+            <div class="night-field-group">
+                <label>Первый игрок для сравнения фракции:</label>
+                <select id="actJourno1">${opts}</select>
+            </div>
+            <div class="night-field-group">
+                <label>Второй игрок для сравнения фракции:</label>
+                <select id="actJourno2">${opts}</select>
+            </div>
+        </div>`;
     }
-    if (isAlive('Свидетель')) form.innerHTML += createSelectHtml('actWitness', '👁️ Свидетель: за кем следить?');
+
+    // 10. Плашка Свидетеля
+    if (isAlive('Свидетель')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>👁️ Свидетель</h4>
+            <div class="night-field-group">
+                <label>За кем установить слежку на ночь?</label>
+                <select id="actWitness">${opts}</select>
+            </div>
+        </div>`;
+    }
 
     form.innerHTML += `<button onclick="calculateNight()" class="btn-night">☀️ Рассчитать итоги ночи</button>`;
 }
+
 function calculateNight() {
     const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
 
@@ -190,7 +294,7 @@ function calculateNight() {
 
     if (nagnetId && !isBlocked('Нагнетатель')) {
         let p = players.find(x => x.id === nagnetId);
-        if (p) { p.isSilenced = true; logs.push(`Нагнетатель лишил права голоса игрока ${p.name}.`); }
+        if (p) { p.isSilenced = true; logs.push(`Нагнетатель заставил молчать игрока ${p.name}.`); }
     }
 
     let mafiaAttacks = [];
@@ -222,7 +326,7 @@ function calculateNight() {
                 let m = players.find(x => x.role === 'Маньяк' && x.isAlive);
                 if(m) killersThisNight.add(m.id);
             } else {
-                logs.push(`🔮 Маньяк напал на обычного Мирного (${target.name}), убийство не произошло.`);
+                logs.push(`🔮 [Маньяк] напал на обычного Мирного (${target.name}), цель выжила.`);
             }
         }
     }
@@ -323,8 +427,9 @@ function renderDayControls() {
             <span>${p.name} ${p.isSilenced ? '<span class="silent-tag">[МОЛЧИТ]</span>' : ''}</span>
             <div class="vote-controls">
                 <span class="vote-count" id="vCount-${p.id}">0</span>
-                <button class="btn-v-plus" onclick="changeVote('${p.id}', 1)" ${p.isSilenced ? 'disabled' : ''}>+1</button>
-                <button class="btn-v-minus" onclick="changeVote('${p.id}', -1)" ${p.isSilenced ? 'disabled' : ''}>-1</button>
+                <!-- Кнопки голосования остаются активными всегда -->
+                <button class="btn-v-plus" onclick="changeVote('${p.id}', 1)">+1</button>
+                <button class="btn-v-minus" onclick="changeVote('${p.id}', -1)">-1</button>
             </div>
         `;
         container.appendChild(div);
