@@ -9,7 +9,7 @@ body {
     background-color: #1a1a2e;
     color: #e2e8f0;
     padding: 12px;
-    font-size: 16px; /* Предотвращает авто-зум в iOS при фокусе на инпутах */
+    font-size: 16px;
 }
 
 .container {
@@ -42,38 +42,36 @@ h2 {
     margin-bottom: 16px;
 }
 
-/* Сетка по умолчанию — в один столбец для телефонов */
 .game-grid {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* Форма добавления игрока */
 .setup-section .input-group {
     display: flex;
-    flex-direction: column; /* Элементы друг под другом на мобильных */
+    flex-direction: column;
     gap: 12px;
 }
 
 .setup-section input,
+.setup-section select,
 .night-form select {
     width: 100%;
-    min-height: 48px; /* Крупная зона для нажатия пальцем */
+    min-height: 48px;
     padding: 12px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 1rem;
     background-color: #fff;
     color: #1a1a2e;
-    -webkit-appearance: none; /* Убирает дефолтные стили Safari */
 }
 
 button {
     background-color: #e94560;
     color: white;
     border: none;
-    min-height: 48px; /* Удобно нажимать на смартфоне */
+    min-height: 48px;
     padding: 12px 24px;
     border-radius: 8px;
     cursor: pointer;
@@ -86,10 +84,20 @@ button {
 }
 
 button:active {
-    transform: scale(0.98); /* Визуальный отклик при тапе */
+    transform: scale(0.98);
 }
 
-/* Список игроков */
+.action-block {
+    margin-bottom: 12px;
+}
+
+.no-roles-msg {
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+    padding: 15px 0;
+}
+
 .players-container {
     display: flex;
     flex-direction: column;
@@ -119,7 +127,7 @@ button:active {
 
 .player-info {
     display: flex;
-    flex-direction: column; /* Имя и роль на разных строках для экономии ширины */
+    flex-direction: column;
     gap: 4px;
 }
 
@@ -148,26 +156,25 @@ button:active {
     background-color: #22c55e;
 }
 
-/* Ночные события */
 .night-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
 }
 
 .night-form label {
     font-size: 0.9rem;
     font-weight: 600;
     color: #475569;
-    margin-top: 5px;
+    margin-bottom: 4px;
+    display: block;
 }
 
 .btn-night {
     background-color: #0f3460;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
-/* Журнал логов */
 .log-section {
     margin-top: 20px;
     border-top: 1px solid #e2e8f0;
@@ -189,7 +196,6 @@ button:active {
     line-height: 1.4;
 }
 
-/* Десктопная адаптация (если откроете на ПК) */
 @media (min-width: 768px) {
     body { padding: 24px; }
     h1 { font-size: 2.2rem; }

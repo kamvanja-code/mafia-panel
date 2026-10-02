@@ -4,13 +4,13 @@ let nightCounter = 1;
 document.addEventListener('DOMContentLoaded', () => {
     const addPlayerBtn = document.getElementById('addPlayerBtn');
     const playerNameInput = document.getElementById('playerName');
-    const playerRoleInput = document.getElementById('playerRole');
+    const playerRoleSelect = document.getElementById('playerRoleSelect');
     const processNightBtn = document.getElementById('processNightBtn');
 
-    // Клик: Добавление игрока
+    // Добавление игрока
     addPlayerBtn.addEventListener('click', () => {
         const name = playerNameInput.value.trim();
-        const role = playerRoleInput.value.trim() || 'Мирный';
+        const role = playerRoleSelect.value;
 
         if (!name) {
             alert('Введите имя игрока!');
@@ -26,64 +26,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
         players.push(newPlayer);
         playerNameInput.value = '';
-        playerRoleInput.value = '';
 
         updateUI();
         addLog(`Игрок ${name} (${role}) вступил в игру.`);
     });
 
-    // Клик: Итоги ночи
+    // Расчет результатов ночи
     processNightBtn.addEventListener('click', () => {
+        const isMafiaActive = isRoleActiveAndAlive('Мафия');
+        const isDoctorActive = isRoleActiveAndAlive('Доктор');
+
         const targetToKillId = document.getElementById('targetToKill').value;
         const targetToHealId = document.getElementById('targetToHeal').value;
 
-        if (!targetToKillId && !targetToHealId) {
-            alert('Вы не выбрали ни одного ночного действия!');
-            return;
-        }
-
         addLog(`--- Итоги Ночи №${nightCounter} ---`);
 
-        let killedPlayer = players.find(p => p.id === targetToKillId);
-        let healedPlayer = players.find(p => p.id === targetToHealId);
+        let killedPlayer = isMafiaActive ? players.find(p => p.id === targetToKillId) : null;
+        let healedPlayer = isDoctorActive ? players.find(p => p.id === targetToHealId) : null;
 
-        // Логика Мафии и Доктора
+        // Логика Мафии
         if (killedPlayer) {
+            // Если мафия стреляла, а Доктор жив и выбрал того же игрока
             if (healedPlayer && killedPlayer.id === healedPlayer.id) {
-                addLog(`🌙 Мафия стреляла в ${killedPlayer.name}, но Доктор спас его!`);
+                addLog(`🌙 Мафия пыталась убить ${killedPlayer.name}, но Доктор спас его!`);
             } else {
                 killedPlayer.isAlive = false;
                 addLog(`💀 Мафия убила игрока ${killedPlayer.name}.`);
             }
         }
 
+        // Логика Доктора (если лечил кого-то другого или мафия вообще не стреляла)
         if (healedPlayer && (!killedPlayer || killedPlayer.id !== healedPlayer.id)) {
-            addLog(`🩺 Доктор лечил игрока ${healedPlayer.name}.`);
+            addLog(`🩺 Доктор вылечил игрока ${healedPlayer.name}.`);
         }
 
         nightCounter++;
-
-        // Сбрасываем селекты формы
-        document.getElementById('targetToKill').value = '';
-        document.getElementById('targetToHeal').value = '';
-
         updateUI();
     });
 });
 
-// Функция перерисовки интерфейса
+// Проверка: есть ли роль за столом и жива ли она
+function isRoleActiveAndAlive(roleName) {
+    return players.some(p => p.role === roleName && p.isAlive);
+}
+
+// Функция обновления всего интерфейса
 function updateUI() {
     const container = document.getElementById('playersContainer');
     const killSelect = document.getElementById('targetToKill');
     const healSelect = document.getElementById('targetToHeal');
 
-    // Очищаем старые элементы
-    container.innerHTML = '';
-    killSelect.innerHTML = '<option value="">-- Выберите жертву --</option>';
-    healSelect.innerHTML = '<option value="">-- Кого лечить --</option>';
+    const mafiaBlock = document.getElementById('mafiaActionBlock');
+    const doctorBlock = document.getElementById('doctorActionBlock');
+    const noRolesMsg = document.getElementById('noActiveRolesMessage');
+    const processBtn = document.getElementById('processNightBtn');
 
+    // Очищаем списки выбора
+    container.innerHTML = '';
+    killSelect.innerHTML = '<option value="">-- Не стрелять --</option>';
+    healSelect.innerHTML = '<option value="">-- Не лечить --</option>';
+
+    // Проверяем статусы ролей
+    const mafiaAlive = isRoleActiveAndAlive('Мафия');
+    const doctorAlive = isRoleActiveAndAlive('Доктор');
+
+    // Отображаем или скрываем блоки действий на основе статуса жизни
+    mafiaBlock.style.display = mafiaAlive ? 'block' : 'none';
+    doctorBlock.style.display = doctorAlive ? 'block' : 'none';
+
+    // Если хоть кто-то активен, показываем кнопку расчета ночи
+    if (mafiaAlive || doctorAlive) {
+        noRolesMsg.style.display = 'none';
+        processBtn.style.display = 'block';
+    } else {
+        noRolesMsg.style.display = 'block';
+        processBtn.style.display = 'none';
+    }
+
+    // Рендерим игроков и наполняем списки живыми
     players.forEach(player => {
-        // 1. Отрисовка списка игроков карточками
         const row = document.createElement('div');
         row.className = `player-row ${player.isAlive ? '' : 'dead'}`;
 
@@ -98,35 +119,31 @@ function updateUI() {
         `;
         container.appendChild(row);
 
-        // 2. Наполнение селекторов выбора (только живыми игроками)
+        // Добавляем только живых в списки ночного выбора
         if (player.isAlive) {
-            const optKill = new Object(document.createElement('option'));
-            optKill.value = player.id;
-            optKill.textContent = player.name;
-            killSelect.appendChild(optKill);
+            const opt = document.createElement('option');
+            opt.value = player.id;
+            opt.textContent = player.name;
 
-            const optHeal = document.createElement('option');
-            optHeal.value = player.id;
-            optHeal.textContent = player.name;
-            healSelect.appendChild(optHeal);
+            if (mafiaAlive) killSelect.appendChild(opt.cloneNode(true));
+            if (doctorAlive) healSelect.appendChild(opt);
         }
     });
 }
 
-// Переключение статуса живой/мертвый вручную (по клику на кнопку в списке)
+// Ручное изменение статуса (кнопка Убить/Оживить в списке игроков)
 function toggleLife(id) {
     const player = players.find(p => p.id === id);
     if (player) {
         player.isAlive = !player.isAlive;
-        addLog(`Статус игрока ${player.name} изменен вручную на: ${player.isAlive ? 'Жив' : 'Мертв'}.`);
+        addLog(`Ведущий изменил статус ${player.name} на: ${player.isAlive ? 'Жив' : 'Мертв'}.`);
         updateUI();
     }
 }
 
-// Функция записи логов
 function addLog(text) {
     const logUl = document.getElementById('gameLog');
     const li = document.createElement('li');
     li.textContent = text;
-    logUl.insertBefore(li, logUl.firstChild); // новые логи сверху
+    logUl.insertBefore(li, logUl.firstChild);
 }

@@ -14,8 +14,13 @@
         <div class="card setup-section">
             <h2>1. Добавить игрока в стол</h2>
             <div class="input-group">
-                <input type="text" id="playerName" placeholder="Имя игрока (или № стола)">
-                <input type="text" id="playerRole" placeholder="Роль (Мирный, Мафия, Доктор...)">
+                <input type="text" id="playerName" placeholder="Имя или № стола">
+                <!-- Заменили инпут на выпадающий список -->
+                <select id="playerRoleSelect">
+                    <option value="Мирный">Мирный гражданин</option>
+                    <option value="Мафия">Мафия</option>
+                    <option value="Доктор">Доктор</option>
+                </select>
                 <button id="addPlayerBtn">Добавить</button>
             </div>
         </div>
@@ -25,25 +30,31 @@
             <div class="card players-list-card">
                 <h2>👥 Список игроков</h2>
                 <div id="playersContainer" class="players-container">
-                    <!-- Игроки будут добавляться сюда через JS -->
+                    <!-- Игроки добавляются через JS -->
                 </div>
             </div>
 
-            <!-- Ночные события -->
+            <!-- Ночные события (динамически управляются через JS) -->
             <div class="card night-actions-card">
                 <h2>🌙 Ночные события</h2>
-                <div class="night-form">
-                    <label for="targetToKill">Кто выбран на убийство?</label>
-                    <select id="targetToKill">
-                        <option value="">-- Выберите игрока --</option>
-                    </select>
 
-                    <label for="targetToHeal">Кого лечит Доктор?</label>
-                    <select id="targetToHeal">
-                        <option value="">-- Выберите игрока --</option>
-                    </select>
+                <div id="nightForm" class="night-form">
+                    <!-- Контейнеры для действий активных ролей -->
+                    <div id="mafiaActionBlock" class="action-block" style="display: none;">
+                        <label for="targetToKill">Кто выбран на убийство (Мафия)?</label>
+                        <select id="targetToKill"></select>
+                    </div>
 
-                    <button id="processNightBtn" class="btn-night">☀️ Рассчитать итоги ночи</button>
+                    <div id="doctorActionBlock" class="action-block" style="display: none;">
+                        <label for="targetToHeal">Кого лечит Доктор?</label>
+                        <select id="targetToHeal"></select>
+                    </div>
+
+                    <div id="noActiveRolesMessage" class="no-roles-msg">
+                        Нет активных живых ролей для проведения ночи.
+                    </div>
+
+                    <button id="processNightBtn" class="btn-night" style="display: none;">☀️ Рассчитать итоги ночи</button>
                 </div>
 
                 <div class="log-section">
