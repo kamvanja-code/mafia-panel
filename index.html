@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель Ведущего Мафии</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Панель Ведущего Мафии</h1>
+
+        <!-- Блок добавления игрока -->
+        <div class="card setup-section">
+            <h2>1. Добавить игрока в стол</h2>
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="Имя игрока (или № стола)">
+                <input type="text" id="playerRole" placeholder="Роль (Мирный, Мафия, Доктор...)">
+                <button id="addPlayerBtn">Добавить</button>
+            </div>
+        </div>
+
+        <div class="game-grid">
+            <!-- Список игроков -->
+            <div class="card players-list-card">
+                <h2>👥 Список игроков</h2>
+                <div id="playersContainer" class="players-container">
+                    <!-- Игроки будут добавляться сюда через JS -->
+                </div>
+            </div>
+
+            <!-- Ночные события -->
+            <div class="card night-actions-card">
+                <h2>🌙 Ночные события</h2>
+                <div class="night-form">
+                    <label for="targetToKill">Кто выбран на убийство?</label>
+                    <select id="targetToKill">
+                        <option value="">-- Выберите игрока --</option>
+                    </select>
+
+                    <label for="targetToHeal">Кого лечит Доктор?</label>
+                    <select id="targetToHeal">
+                        <option value="">-- Выберите игрока --</option>
+                    </select>
+
+                    <button id="processNightBtn" class="btn-night">☀️ Рассчитать итоги ночи</button>
+                </div>
+
+                <div class="log-section">
+                    <h3>📜 Журнал событий:</h3>
+                    <ul id="gameLog"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
