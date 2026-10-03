@@ -4,7 +4,7 @@ let nightCounter = 1;
 let morningSpeechText = "";
 
 const mafiaFraction = ['Мафия', 'Оборотень', 'Босс', 'Нагнетатель', 'Киллер', 'Сэнсей', 'Камикадзе', 'Ниндзя'];
-const activePeaceful = ['Бессмертный', 'Любовница', 'Телохранитель', 'Комиссар', 'Священник', 'Журналист', 'Свидетель'];
+const activePeaceful = ['Доктор', 'Бессмертный', 'Любовница', 'Телохранитель', 'Комиссар', 'Священник', 'Журналист', 'Свидетель'];
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
@@ -126,6 +126,13 @@ function renderNightControls() {
         </div>`;
     }
 
+    if (isAlive('Доктор')) {
+        form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
+            <h4>🩺 Доктор</h4>
+            <div class="night-field-group"><label>Кого вылечить ночью?</label><select id="actHeal">${opts}</select></div>
+        </div>`;
+    }
+
     const totalMafiaAlive = players.filter(p => mafiaFraction.includes(p.role) && p.isAlive);
     const regularShooters = totalMafiaAlive.filter(p => p.role !== 'Босс');
     const hasBoss = isAlive('Босс');
@@ -140,20 +147,20 @@ function renderNightControls() {
         mafiaCardHtml += `</div>`;
         form.innerHTML += mafiaCardHtml;
     }
-
     if (isAlive('Ниндзя')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
             <h4>🥷 Ниндзя</h4>
             <div class="night-field-group"><label>Какого игрока атаковать скрытно?</label><select id="actNinjaGuessTarget">${opts}</select></div>
-            <div class="night-field-group"><label>Предположение роли (для доп. убийства):</label>
+            <div class="night-field-group"><label>Предположение роли:</label>
                 <select id="actNinjaRoleGuess"><option value="">-- Нет предположения --</option>
                 <option value="Мирный">Мирный</option><option value="Бессмертный">Бессмертный</option>
                 <option value="Любовница">Любовница</option><option value="Телохранитель">Телохранитель</option>
                 <option value="Комиссар">Комиссар</option><option value="Священник">Священник</option>
                 <option value="Журналист">Журналист</option><option value="Свидетель">Свидетель</option>
-                <option value="Маньяк">Маньяк</option></select></div>
+                <option value="Маньяк">Маньяк</option><option value="Доктор">Доктор</option></select></div>
         </div>`;
     }
+
     if (isAlive('Маньяк')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #8b5cf6;">
             <h4>🔮 Маньяк</h4>
@@ -206,6 +213,7 @@ function calculateNight() {
 
     let loveTargetId = getVal('actLove');
     let guardTargetId = getVal('actGuard');
+    let healTargetId = getVal('actHeal');
     let mafia1Id = getVal('actMafia1');
     let mafia2Id = getVal('actMafia2');
     let ninjaGuessTargetId = getVal('actNinjaGuessTarget');
@@ -319,6 +327,12 @@ function calculateNight() {
         let victim = players.find(x => x.id === attack.targetId);
         if (!victim || !victim.isAlive) return;
 
+        // Лечение Доктора (Доктор должен быть жив и не заблокирован Любовницей)
+        if (healTargetId && victim.id === healTargetId && !isBlocked('Доктор')) {
+            morningReport.push(`🩺 Доктор спас игрока ${victim.name} от неминуемой смерти!`);
+            return;
+        }
+
         if (guardTargetId && victim.id === guardTargetId && !isBlocked('Телохранитель')) {
             let guard = players.find(x => x.role === 'Телохранитель' && x.isAlive);
             if (guard && !deadThisNight.has(guard.id)) {
@@ -410,7 +424,7 @@ function processDayVoting() {
     }
 
     nightCounter++;
-    gamePhase = 'night';
+    gamePhase = 'night'; // Переходим в ночь, проверка конца игры сработает внутри updateUI()
     updateUI();
     openModal('speechModal');
     document.getElementById('speechContent').textContent = morningSpeechText;
@@ -430,7 +444,7 @@ function checkGameEnd() {
 
     let activeNonPeacefulCount = alive.filter(p => p.role !== 'Мирный').length;
 
-    // 1. Маньяк
+    // 1. Условие Маньяка
     if (maniacCount > 0 && activeNonPeacefulCount === 1) {
         title.textContent = "КРОВАВЫЙ ТРИУМФ ОДИНОЧКИ!";
         story.textContent = "Все криминальные синдикаты разгромлены, а мирные граждане заперлись в домах. Город полностью перешел под контроль безумного Одиночки. Маньяк празднует победу на залитых неоном пустых улицах.";
@@ -438,18 +452,18 @@ function checkGameEnd() {
         return;
     }
 
-    // 2. Мафия
-    if (mafiaCount >= (peacefulCount + maniacCount) && mafiaCount > 0) {
+    // 2. Условие Мафии (Срабатывает ТОЛЬКО при наступлении ночи)
+    if (gamePhase === 'night' && mafiaCount >= (peacefulCount + maniacCount) && mafiaCount > 0) {
         title.textContent = "МАФИЯ ПОЛНОСТЬЮ ПОДЧИНИЛА ГОРОД!";
         story.textContent = "Честные люди проиграли эту войну. Коррупция и мафиозные кланы полностью захватили контроль над мэрией, полицией и судами. С этого дня законы диктуются Семьей. Криминальная эра официально началась.";
         overBlock.style.display = 'flex';
         return;
     }
 
-    // 3. Мирные
+    // 3. Условие Мирных
     if (mafiaCount === 0 && maniacCount === 0) {
         title.textContent = "ПРАВОСУДИЕ СТОРЖЕСТВОВАЛО!";
-        story.textContent = "Долгий кошмар окончен. Объединенными усилиями Комиссара, Священника и честных граждан все члены организованной преступности и безумные убийцы были вычислены и навсегда отстранены от стола. Город наконец-то может спать спокойно.";
+        story.textContent = "Долгий кошмар окончен. Объединенными усилиями Комиссара, Священника, Доктора и честных граждан все члены организованной преступности и безумные убийцы были вычислены. Город наконец-то может спать спокойно.";
         overBlock.style.display = 'flex';
         return;
     }
