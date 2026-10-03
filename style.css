@@ -58,13 +58,6 @@ h2 {
     border: 1px solid #e94560;
 }
 
-.game-over-card {
-    background: #7c2d12 !important;
-    color: white !important;
-    text-align: center;
-    border: 3px solid #f97316;
-}
-
 .card {
     background: #ffffff;
     color: #1e293b;
@@ -107,7 +100,6 @@ button {
 }
 
 button:active { transform: scale(0.98); }
-
 .btn-start { background-color: #10b981; }
 
 .game-grid {
@@ -153,14 +145,6 @@ button:active { transform: scale(0.98); }
     font-weight: bold;
 }
 
-.btn-kill {
-    min-height: 34px;
-    font-size: 0.85rem;
-    background-color: #475569;
-}
-.btn-kill.is-dead { background-color: #10b981; }
-
-/* Единая плашка для роли */
 .night-role-card {
     margin-bottom: 12px;
     background: #f8fafc;
@@ -173,26 +157,10 @@ button:active { transform: scale(0.98); }
     font-size: 0.95rem;
     color: #1e293b;
     margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
-.night-field-group {
-    margin-bottom: 8px;
-}
-
-.night-field-group:last-child {
-    margin-bottom: 0;
-}
-
-.night-field-group label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #64748b;
-    margin-bottom: 3px;
-    display: block;
-}
+.night-field-group { margin-bottom: 8px; }
+.night-field-group label { font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 3px; display: block; }
 
 .btn-night { background-color: #16213e; width: 100%; margin-top: 10px; }
 .btn-day { background-color: #d97706; width: 100%; margin-top: 15px; }
@@ -210,60 +178,89 @@ button:active { transform: scale(0.98); }
 .vote-count { font-weight: bold; font-size: 1.1rem; min-width: 24px; text-align: center;}
 .btn-v-plus { min-height: 36px; padding: 4px 12px; background: #2563eb; }
 .btn-v-minus { min-height: 36px; padding: 4px 12px; background: #64748b; }
-
 .silent-tag { color: #8b5cf6; font-size: 0.75rem; font-weight: bold; }
 
 .log-section { margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 10px; }
 #gameLog { list-style: none; max-height: 140px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; color: #475569; }
 #gameLog li { padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
 
-.modal {
-    display: none;
+/* КРАСИВАЯ ДЕТЕКТИВНАЯ ГАЗЕТА НА ВЕСЬ ЭКРАН */
+.noir-newspaper-overlay {
     position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 10, 18, 0.95);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+}
+
+.newspaper-box {
+    background: #f2ebd9; /* Цвет старой пожелтевшей бумаги */
+    color: #1c1c1c;
+    padding: 25px 20px;
     width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.6);
+    max-width: 550px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    border: 1px solid #d1c7a7;
+    font-family: 'Courier New', Courier, monospace !important;
 }
 
-.modal-content {
-    background-color: #fff;
-    color: #1e293b;
-    margin: 10% auto;
-    padding: 16px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    position: relative;
+.newspaper-box * {
+    font-family: 'Courier New', Courier, monospace !important;
 }
 
-.close-btn {
-    position: absolute;
-    right: 14px;
-    top: 10px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #64748b;
+.newspaper-header {
+    text-align: center;
+    border-bottom: 3px double #1c1c1c;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
 }
 
+.newspaper-date { font-size: 0.75rem; letter-spacing: 2px; }
+.newspaper-header h1 { font-size: 1.8rem; font-weight: 900; color: #1c1c1c; margin: 5px 0; border: none; text-shadow: none; }
+.newspaper-bar { border-top: 1px solid #1c1c1c; padding: 4px 0; font-size: 0.75rem; font-weight: bold; }
+
+.newspaper-content {
+    border-bottom: 3px double #1c1c1c;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.newspaper-content h2 {
+    font-size: 1.3rem;
+    color: #990000;
+    text-align: center;
+    margin-bottom: 12px;
+    border: none;
+}
+
+.newspaper-content p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: justify;
+    white-space: pre-line;
+}
+
+.btn-restart-noir {
+    background-color: #1c1c1c;
+    color: #f2ebd9;
+    width: 100%;
+    min-height: 48px;
+    border: 2px solid #1c1c1c;
+}
+.btn-restart-noir:hover { background-color: #333; }
+
+/* МОДАЛЬНЫЕ ОКНА */
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
+.modal-content { background-color: #fff; color: #1e293b; margin: 10% auto; padding: 16px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
+.close-btn { position: absolute; right: 14px; top: 10px; font-size: 28px; font-weight: bold; cursor: pointer; color: #64748b; }
 .modal-scroll { max-height: 350px; overflow-y: auto; padding-right: 5px; }
 .modal-scroll h3 { font-size: 1rem; margin: 10px 0 5px 0; color: #1f4068; }
 .modal-scroll ul, .modal-scroll ol { padding-left: 20px; font-size: 0.9rem; }
 .modal-scroll li { margin-bottom: 6px; }
-
-.speech-box {
-    background: #f1f5f9;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #10b981;
-    font-style: italic;
-    white-space: pre-line;
-    max-height: 250px;
-    overflow-y: auto;
-}
+.speech-box { background: #f1f5f9; padding: 12px; border-radius: 6px; border-left: 4px solid #10b981; font-style: italic; white-space: pre-line; max-height: 250px; overflow-y: auto; }
 
 @media (min-width: 768px) {
     body { padding: 20px; }

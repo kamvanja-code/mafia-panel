@@ -43,7 +43,6 @@ function startGame() {
     updateUI();
 }
 
-// Вспомогательная функция для генерации селекторов
 function getSelectOptionsHtml(alivePlayers) {
     let html = '<option value="">-- Не выбирать --</option>';
     alivePlayers.forEach(p => { html += `<option value="${p.id}">${p.name}</option>`; });
@@ -113,29 +112,20 @@ function renderNightControls() {
     const alivePlayers = players.filter(p => p.isAlive);
     const opts = getSelectOptionsHtml(alivePlayers);
 
-    // 1. Плашка Любовницы
     if (isAlive('Любовница')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
             <h4>💘 Любовница</h4>
-            <div class="night-field-group">
-                <label>Кого заблокировать на эту ночь?</label>
-                <select id="actLove">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>Кого заблокировать на эту ночь?</label><select id="actLove">${opts}</select></div>
         </div>`;
     }
 
-    // 2. Плашка Телохранителя
     if (isAlive('Телохранитель')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
             <h4>🛡️ Телохранитель</h4>
-            <div class="night-field-group">
-                <label>Кого защитить от атаки?</label>
-                <select id="actGuard">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>Кого защитить от атаки?</label><select id="actGuard">${opts}</select></div>
         </div>`;
     }
 
-    // 3. Единая плашка Мафии
     const totalMafiaAlive = players.filter(p => mafiaFraction.includes(p.role) && p.isAlive);
     const regularShooters = totalMafiaAlive.filter(p => p.role !== 'Босс');
     const hasBoss = isAlive('Босс');
@@ -143,116 +133,68 @@ function renderNightControls() {
     if (regularShooters.length > 0 || (hasBoss && regularShooters.length === 0)) {
         let mafiaCardHtml = `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
             <h4>🎯 Фракция Мафии</h4>
-            <div class="night-field-group">
-                <label>Основная цель для стрельбы:</label>
-                <select id="actMafia1">${opts}</select>
-            </div>`;
-
+            <div class="night-field-group"><label>Основная цель для стрельбы:</label><select id="actMafia1">${opts}</select></div>`;
         if (totalMafiaAlive.length === 1 && totalMafiaAlive[0].role === 'Киллер') {
-            mafiaCardHtml += `<div class="night-field-group">
-                <label>🔥 Второй выстрел Киллера (Остался один):</label>
-                <select id="actMafia2">${opts}</select>
-            </div>`;
+            mafiaCardHtml += `<div class="night-field-group"><label>🔥 Второй выстрел Киллера:</label><select id="actMafia2">${opts}</select></div>`;
         }
         mafiaCardHtml += `</div>`;
         form.innerHTML += mafiaCardHtml;
     }
 
-    // 4. Плашка Ниндзя
     if (isAlive('Ниндзя')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
             <h4>🥷 Ниндзя</h4>
-            <div class="night-field-group">
-                <label>Какого игрока атаковать скрытно?</label>
-                <select id="actNinjaGuessTarget">${opts}</select>
-            </div>
-            <div class="night-field-group">
-                <label>Какую роль предполагаете у цели? (Для доп. убийства)</label>
-                <select id="actNinjaRoleGuess">
-                    <option value="">-- Нет предположения --</option>
-                    <option value="Мирный">Мирный</option><option value="Бессмертный">Бессмертный</option>
-                    <option value="Любовница">Любовница</option><option value="Телохранитель">Телохранитель</option>
-                    <option value="Комиссар">Комиссар</option><option value="Священник">Священник</option>
-                    <option value="Журналист">Журналист</option><option value="Свидетель">Свидетель</option>
-                    <option value="Маньяк">Маньяк</option>
-                </select>
-            </div>
+            <div class="night-field-group"><label>Какого игрока атаковать скрытно?</label><select id="actNinjaGuessTarget">${opts}</select></div>
+            <div class="night-field-group"><label>Предположение роли (для доп. убийства):</label>
+                <select id="actNinjaRoleGuess"><option value="">-- Нет предположения --</option>
+                <option value="Мирный">Мирный</option><option value="Бессмертный">Бессмертный</option>
+                <option value="Любовница">Любовница</option><option value="Телохранитель">Телохранитель</option>
+                <option value="Комиссар">Комиссар</option><option value="Священник">Священник</option>
+                <option value="Журналист">Журналист</option><option value="Свидетель">Свидетель</option>
+                <option value="Маньяк">Маньяк</option></select></div>
         </div>`;
     }
-    // 5. Плашка Маньяка
     if (isAlive('Маньяк')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #8b5cf6;">
             <h4>🔮 Маньяк</h4>
-            <div class="night-field-group">
-                <label>Цель охоты (погибнет, если не обычный Мирный):</label>
-                <select id="actManiac">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>Цель охоты (умрёт, если не обычный Мирный):</label><select id="actManiac">${opts}</select></div>
         </div>`;
     }
 
-    // 6. Плашка Нагнетателя
     if (isAlive('Нагнетатель')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #dc2626;">
             <h4>🤫 Нагнетатель</h4>
-            <div class="night-field-group">
-                <label>Кого заставить молчать весь следующий день?</label>
-                <select id="actNagnet">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>Кого заставить молчать весь следующий день?</label><select id="actNagnet">${opts}</select></div>
         </div>`;
     }
 
-    // 7. Плашка Комиссара
     if (isAlive('Комиссар')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
             <h4>🔍 Комиссар</h4>
-            <div class="night-field-group">
-                <label>В кого совершить выстрел?</label>
-                <select id="actSheriff">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>В кого совершить выстрел?</label><select id="actSheriff">${opts}</select></div>
         </div>`;
     }
 
-    // 8. Плашка Священника
     if (isAlive('Священник')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
             <h4>⛪ Священник</h4>
-            <div class="night-field-group">
-                <label>Выбор цели:</label>
-                <select id="actPriestTarget">${opts}</select>
-            </div>
-            <div class="night-field-group">
-                <label>Тип действия:</label>
-                <select id="actPriestType">
-                    <option value="check">Проверить (Узнать грехи)</option>
-                    <option value="execute">Казнить (Убить игрока)</option>
-                </select>
-            </div>
+            <div class="night-field-group"><label>Выбор цели:</label><select id="actPriestTarget">${opts}</select></div>
+            <div class="night-field-group"><label>Тип действия:</label><select id="actPriestType"><option value="check">Проверить</option><option value="execute">Казнить</option></select></div>
         </div>`;
     }
 
-    // 9. Плашка Журналиста
     if (isAlive('Журналист')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
             <h4>📰 Журналист</h4>
-            <div class="night-field-group">
-                <label>Первый игрок для сравнения фракции:</label>
-                <select id="actJourno1">${opts}</select>
-            </div>
-            <div class="night-field-group">
-                <label>Второй игрок для сравнения фракции:</label>
-                <select id="actJourno2">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>Первый игрок:</label><select id="actJourno1">${opts}</select></div>
+            <div class="night-field-group"><label>Второй игрок:</label><select id="actJourno2">${opts}</select></div>
         </div>`;
     }
 
-    // 10. Плашка Свидетеля
     if (isAlive('Свидетель')) {
         form.innerHTML += `<div class="night-role-card" style="border-left: 4px solid #10b981;">
             <h4>👁️ Свидетель</h4>
-            <div class="night-field-group">
-                <label>За кем установить слежку на ночь?</label>
-                <select id="actWitness">${opts}</select>
-            </div>
+            <div class="night-field-group"><label>За кем установить слежку?</label><select id="actWitness">${opts}</select></div>
         </div>`;
     }
 
@@ -309,7 +251,7 @@ function calculateNight() {
         let target = players.find(x => x.id === ninjaGuessTargetId);
         if (target && target.role === ninjaRoleGuess) {
             mafiaAttacks.push(ninjaGuessTargetId);
-            logs.push(`🥷 Ниндзя угадал роль игрока ${target.name} (${target.role}) и совершил доп. убийство!`);
+            logs.push(`🥷 Ниндзя угадал роль игрока ${target.name} и совершил убийство!`);
         }
     }
 
@@ -326,7 +268,7 @@ function calculateNight() {
                 let m = players.find(x => x.role === 'Маньяк' && x.isAlive);
                 if(m) killersThisNight.add(m.id);
             } else {
-                logs.push(`🔮 [Маньяк] напал на обычного Мирного (${target.name}), цель выжила.`);
+                logs.push(`🔮 Маньяк напал на обычного Мирного (${target.name}), цель выжила.`);
             }
         }
     }
@@ -360,7 +302,7 @@ function calculateNight() {
             let type1 = mafiaFraction.includes(p1.role) ? 'мафия' : (p1.role === 'Маньяк' ? 'маньяк' : 'мирный');
             let type2 = mafiaFraction.includes(p2.role) ? 'мафия' : (p2.role === 'Маньяк' ? 'маньяк' : 'мирный');
             let checkResult = (type1 === type2) ? "ОДИНАКОВЫЙ" : "РАЗНЫЙ";
-            logs.push(`📰 Журналист сравнил ${p1.name} и ${p2.name}: у них ${checkResult} статус фракции.`);
+            logs.push(`📰 Журналист сравнил ${p1.name} и ${p2.name}: у них ${checkResult} статус.`);
         }
     }
 
@@ -427,7 +369,6 @@ function renderDayControls() {
             <span>${p.name} ${p.isSilenced ? '<span class="silent-tag">[МОЛЧИТ]</span>' : ''}</span>
             <div class="vote-controls">
                 <span class="vote-count" id="vCount-${p.id}">0</span>
-                <!-- Кнопки голосования остаются активными всегда -->
                 <button class="btn-v-plus" onclick="changeVote('${p.id}', 1)">+1</button>
                 <button class="btn-v-minus" onclick="changeVote('${p.id}', -1)">-1</button>
             </div>
@@ -483,28 +424,33 @@ function checkGameEnd() {
     let maniacCount = alive.filter(p => p.role === 'Маньяк').length;
     let peacefulCount = alive.length - mafiaCount - maniacCount;
 
-    let overBlock = document.getElementById('gameOverScreen');
-    let winnerText = document.getElementById('winnerText');
+    let overBlock = document.getElementById('noirGameOverScreen');
+    let title = document.getElementById('newspaperTitle');
+    let story = document.getElementById('newspaperStory');
 
     let activeNonPeacefulCount = alive.filter(p => p.role !== 'Мирный').length;
+
+    // 1. Маньяк
     if (maniacCount > 0 && activeNonPeacefulCount === 1) {
-        winnerText.textContent = "🏆 ПОБЕДА МАНЬЯКА! 🔮";
-        winnerText.style.color = "#8b5cf6";
-        overBlock.style.display = 'block';
+        title.textContent = "КРОВАВЫЙ ТРИУМФ ОДИНОЧКИ!";
+        story.textContent = "Все криминальные синдикаты разгромлены, а мирные граждане заперлись в домах. Город полностью перешел под контроль безумного Одиночки. Маньяк празднует победу на залитых неоном пустых улицах.";
+        overBlock.style.display = 'flex';
         return;
     }
 
+    // 2. Мафия
     if (mafiaCount >= (peacefulCount + maniacCount) && mafiaCount > 0) {
-        winnerText.textContent = "🏆 ПОБЕДА МАФИИ! 🎯";
-        winnerText.style.color = "#dc2626";
-        overBlock.style.display = 'block';
+        title.textContent = "МАФИЯ ПОЛНОСТЬЮ ПОДЧИНИЛА ГОРОД!";
+        story.textContent = "Честные люди проиграли эту войну. Коррупция и мафиозные кланы полностью захватили контроль над мэрией, полицией и судами. С этого дня законы диктуются Семьей. Криминальная эра официально началась.";
+        overBlock.style.display = 'flex';
         return;
     }
 
+    // 3. Мирные
     if (mafiaCount === 0 && maniacCount === 0) {
-        winnerText.textContent = "🏆 ПОБЕДА МИРНЫХ! 🏙️";
-        winnerText.style.color = "#10b981";
-        overBlock.style.display = 'block';
+        title.textContent = "ПРАВОСУДИЕ СТОРЖЕСТВОВАЛО!";
+        story.textContent = "Долгий кошмар окончен. Объединенными усилиями Комиссара, Священника и честных граждан все члены организованной преступности и безумные убийцы были вычислены и навсегда отстранены от стола. Город наконец-то может спать спокойно.";
+        overBlock.style.display = 'flex';
         return;
     }
 }
